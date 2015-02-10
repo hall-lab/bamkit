@@ -101,6 +101,12 @@ description: filter readgroup(s) from a BAM file")
     # parse the arguments
     args = parser.parse_args()
 
+    # bail if no BAM file
+    if args.input is None:
+        if sys.stdin.isatty():
+            parser.print_help()
+            exit(1)
+    
     # send back the user input
     return args
 

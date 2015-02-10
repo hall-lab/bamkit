@@ -17,7 +17,7 @@ __date__ = "$Date: 2014-12-15 11:43 $"
 
 def bamgroupreads(bamfile, readgroup, reset_dups, fix_flags, is_sam, bam_out, uncompressed_out):
     # set input file
-    if bamfile == None: 
+    if bamfile == None:
         if is_sam:
             in_bam = pysam.Samfile("-", "r")
         else:
@@ -136,6 +136,12 @@ description: Group BAM file by read IDs without sorting")
     # parse the arguments
     args = parser.parse_args()
 
+    # bail if no BAM file
+    if args.input is None:
+        if sys.stdin.isatty():
+            parser.print_help()
+            exit(1)
+    
     # send back the user input
     return args
 
