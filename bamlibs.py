@@ -31,7 +31,7 @@ description: output comma delimited string of read group IDs for each library")
             parser.print_help()
             exit(1)
         else:
-            args.input = sys.stdin
+            args.input = '-'
 
     # send back the user input
     return args
