@@ -19,19 +19,19 @@ version: " + __version__ + "\n\
 description: remove illegal and malformed fields from a BAM file's header")
     parser.add_argument('-S', '--is_sam', required=False, action='store_true', help='input is SAM')
     # parser.add_argument('-H', required=False, action='store_true', help='output header and quit')
-    parser.add_argument('input', nargs='?', type=str, default=None,
+    parser.add_argument('input', nargs='*', type=str,
                         help='SAM/BAM file to inject header lines into. If \'-\' or absent then defaults to stdin.')
 
     # parse the arguments
     args = parser.parse_args()
 
     # if no input, check if part of pipe and if so, read stdin.
-    if args.input == None:
+    if len(args.input) == 0:
         if sys.stdin.isatty():
             parser.print_help()
             exit(1)
         else:
-            args.input = sys.stdin
+            args.input = ['-']
 
     # send back the user input
     return args
@@ -39,7 +39,6 @@ description: remove illegal and malformed fields from a BAM file's header")
 # extract read group information from header of original bam
 def get_clean_header(bam):
     clean_header_list = list()
-
     for line in bam.text.split('\n'):
         if len(line.rstrip()) == 0:
             continue
@@ -134,7 +133,8 @@ def main():
     args = get_args()
 
     # clean the header
-    bam_clean(args.input, args.is_sam, True)
+    for mybam in args.input:
+        bam_clean(mybam, args.is_sam, True)
 
 # initialize the script
 if __name__ == '__main__':
