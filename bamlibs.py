@@ -39,9 +39,9 @@ description: output comma delimited string of read group IDs for each library")
 # add read group info to header of new sam file
 def get_libs(bam, is_sam, header_only):
     if is_sam:
-        in_bam = pysam.Samfile(bam, 'r')
+        in_bam = pysam.Samfile(bam, 'r', check_sq=False)
     else:
-        in_bam = pysam.Samfile(bam, 'rb')
+        in_bam = pysam.Samfile(bam, 'rb', check_sq=False)
 
     lib_rg = defaultdict(list)
     for line in in_bam.text.split('\n'):
