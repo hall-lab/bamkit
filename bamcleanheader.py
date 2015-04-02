@@ -102,9 +102,9 @@ def get_clean_header(bam):
 # add read group info to header of new sam file
 def bam_clean(bam, is_sam, header_only):
     if is_sam:
-        in_bam = pysam.Samfile(bam, 'r')
+        in_bam = pysam.Samfile(bam, 'r', check_sq=False)
     else:
-        in_bam = pysam.Samfile(bam, 'rb')
+        in_bam = pysam.Samfile(bam, 'rb', check_sq=False)
 
     # out_bam = pysam.Samfile('-', 'w', template=in_bam)
 

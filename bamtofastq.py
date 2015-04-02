@@ -19,14 +19,14 @@ def bamtofastq(bamfile, is_sam, readgroup, rename, header):
     # get file and header
     if bamfile == None: 
         if is_sam:
-            bam = pysam.Samfile("-", "r")
+            bam = pysam.Samfile("-", "r", check_sq=False)
         else:
-            bam = pysam.Samfile('-', 'rb')
+            bam = pysam.Samfile('-', 'rb', check_sq=False)
     else:
         if is_sam:
-            bam = pysam.Samfile(bamfile, 'r')
+            bam = pysam.Samfile(bamfile, 'r', check_sq=False)
         else:
-            bam = pysam.Samfile(bamfile, "rb")
+            bam = pysam.Samfile(bamfile, "rb", check_sq=False)
     # parse readgroup string
     try:
         rg_list = readgroup.split(',')
@@ -36,8 +36,7 @@ def bamtofastq(bamfile, is_sam, readgroup, rename, header):
     d = {}
     counter = 0
     header_written = False
-    # for al in bam.fetch():
-    # al = bam.next()
+
     for al in bam:
         # print the header to file if requested
         if (header is not None
