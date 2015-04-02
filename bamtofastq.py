@@ -15,78 +15,79 @@ __author__ = "Ira Hall (ihall@genome.wustl.edu) and Colby Chiang (cc2qe@virginia
 __version__ = "$Revision: 0.0.1 $"
 __date__ = "$Date: 2014-09-04 14:31 $"
 
-def bamtofastq(bamfile, is_sam, readgroup, rename, header):
-    # get file and header
-    if bamfile == None: 
-        if is_sam:
-            bam = pysam.Samfile("-", "r", check_sq=False)
-        else:
-            bam = pysam.Samfile('-', 'rb', check_sq=False)
-    else:
-        if is_sam:
-            bam = pysam.Samfile(bamfile, 'r', check_sq=False)
-        else:
-            bam = pysam.Samfile(bamfile, "rb", check_sq=False)
-    # parse readgroup string
-    try:
-        rg_list = readgroup.split(',')
-    except AttributeError:
-        rg_list = None
-
-    d = {}
-    counter = 0
-    header_written = False
-
-    for al in bam:
-        # print the header to file if requested
-        if (header is not None
-            and not header_written):
-            header.write(bam.text)
-            header.close()
-            header_written = True
-
-        # must be primary read alignment
-        if (al.is_secondary):
-            continue
-
-        # skip unpaired reads
-        if (not al.is_paired):
-            continue
-
-        # must be in a user specified readgroup
-        if rg_list and al.opt('RG') not in rg_list:
-            continue
-
-        # ensures the read is not hard-clipped. important
-        # when the BAM doesn't have shorter hits flagged as
-        # secondary
-        if 5 in [x[0] for x in al.cigar]:
-            continue
-
-        # add read name to dictionary if not already there
-        key = al.qname
-        if key not in d:
-            d.setdefault(key,al)
-        # print matched read pairs
-        else:
-            # RG:Z:ID
-            RG1 = d[key].opt('RG')
-            RG2 = al.opt('RG')
-
-            counter += 1
-            if rename:
-                al.qname = RG2 + '.' + str(counter)
-                d[key].qname = RG1 + '.' + str(counter)
-            
-            if al.is_read1:
-                printfastq_rg(al,1,RG2)
-                printfastq_rg(d[key],2,RG1)
+def bamtofastq(bamlist, is_sam, readgroup, rename, header):
+    for bamfile in bamlist:
+        # get file and header
+        if bamfile == None: 
+            if is_sam:
+                bam = pysam.Samfile("-", "r", check_sq=False)
             else:
-                printfastq_rg(d[key],1,RG1)
-                printfastq_rg(al,2,RG2)
-            del d[key]
-    if len(d) != 0:
-        sys.stderr.write('Warning: %s unmatched name groups\n' % len(d))
+                bam = pysam.Samfile('-', 'rb', check_sq=False)
+        else:
+            if is_sam:
+                bam = pysam.Samfile(bamfile, 'r', check_sq=False)
+            else:
+                bam = pysam.Samfile(bamfile, "rb", check_sq=False)
+        # parse readgroup string
+        try:
+            rg_list = readgroup.split(',')
+        except AttributeError:
+            rg_list = None
+
+        d = {}
+        counter = 0
+        header_written = False
+
+        for al in bam:
+            # print the header to file if requested
+            if (header is not None
+                and not header_written):
+                header.write(bam.text)
+                header.close()
+                header_written = True
+
+            # must be primary read alignment
+            if (al.is_secondary):
+                continue
+
+            # skip unpaired reads
+            if (not al.is_paired):
+                continue
+
+            # must be in a user specified readgroup
+            if rg_list and al.opt('RG') not in rg_list:
+                continue
+
+            # ensures the read is not hard-clipped. important
+            # when the BAM doesn't have shorter hits flagged as
+            # secondary
+            if 5 in [x[0] for x in al.cigar]:
+                continue
+
+            # add read name to dictionary if not already there
+            key = al.qname
+            if key not in d:
+                d.setdefault(key,al)
+            # print matched read pairs
+            else:
+                # RG:Z:ID
+                RG1 = d[key].opt('RG')
+                RG2 = al.opt('RG')
+
+                counter += 1
+                if rename:
+                    al.qname = RG2 + '.' + str(counter)
+                    d[key].qname = RG1 + '.' + str(counter)
+
+                if al.is_read1:
+                    printfastq_rg(al,1,RG2)
+                    printfastq_rg(d[key],2,RG1)
+                else:
+                    printfastq_rg(d[key],1,RG1)
+                    printfastq_rg(al,2,RG2)
+                del d[key]
+        if len(d) != 0:
+            sys.stderr.write('Warning: %s unmatched name groups\n' % len(d))
 
 #===================================================================================================================================================
 # functions
@@ -99,21 +100,25 @@ author: " + __author__ + "\n\
 version: " + __version__ + "\n\
 description: Convert a coordinate sorted BAM file to FASTQ\n\
              (ignores unpaired reads)")
-    parser.add_argument('-i', '--input', metavar='BAM', required=False, help='Input BAM file')
+    # parser.add_argument('-i', '--input', metavar='BAM', required=False, help='Input BAM file')
     parser.add_argument('-r', '--readgroup', metavar='STR', default=None, required=False, help='Read group(s) to extract (comma separated)')
     parser.add_argument('-n', '--rename', required=False, action='store_true', help='Rename reads')
     parser.add_argument('-S', '--is_sam', required=False, action='store_true', help='Input is SAM format')
     parser.add_argument('-H', '--header', metavar='FILE', type=argparse.FileType('w'), default=None, required=False,
                         help='Write BAM header to file')
+    parser.add_argument('input', metavar='BAM', nargs='*', type=str,
+                        help='Input BAM file(s). If absent then defaults to stdin.')
 
     # parse the arguments
     args = parser.parse_args()
 
     # bail if no BAM file
-    if args.input is None:
+    if len(args.input) == 0:
         if sys.stdin.isatty():
             parser.print_help()
             exit(1)
+        else:
+            args.input = [None]
     
     # send back the user input
     return args
@@ -145,6 +150,7 @@ class Usage(Exception):
 
 def main():
     args = get_args()
+
     bamtofastq(args.input,
                args.is_sam,
                args.readgroup,
