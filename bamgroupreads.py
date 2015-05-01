@@ -74,7 +74,7 @@ def bamgroupreads(bamfile, readgroup, reset_dups, fix_flags, is_sam, bam_out, un
                                 proper_pair = True
                             if flagcheck.is_duplicate:
                                 duplicate = True
-                            if (flagcheck.is_secondary or lagcheck.is_supplementary):
+                            if (flagcheck.is_secondary or flagcheck.is_supplementary):
                                 continue
                             if flagcheck.is_read1:
                                 read1_unmapped = flagcheck.is_unmapped
