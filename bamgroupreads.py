@@ -74,7 +74,7 @@ def bamgroupreads(bamfile, readgroup, reset_dups, fix_flags, is_sam, bam_out, un
                                 proper_pair = True
                             if flagcheck.is_duplicate:
                                 duplicate = True
-                            if flagcheck.is_secondary:
+                            if (flagcheck.is_secondary or lagcheck.is_supplementary):
                                 continue
                             if flagcheck.is_read1:
                                 read1_unmapped = flagcheck.is_unmapped
@@ -108,7 +108,7 @@ class Namegroup():
 
     def add_alignment(self, al):
         self.alignments.append(al)
-        if not al.is_secondary:
+        if not (al.is_secondary or al.is_supplementary):
             self.num_prim += 1
             try:
                 self.sa += len(al.opt('SA').rstrip(';').split(';'))
