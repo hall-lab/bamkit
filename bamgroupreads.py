@@ -74,7 +74,8 @@ def bamgroupreads(bamfile, readgroup, reset_dups, fix_flags, is_sam, bam_out, un
                                 proper_pair = True
                             if flagcheck.is_duplicate:
                                 duplicate = True
-                            if (flagcheck.is_secondary or flagcheck.is_supplementary):
+                            if (legacy and flagcheck.is_secondary
+                                or not legacy and flagcheck.flag & 2048 == 2048):
                                 continue
                             if flagcheck.is_read1:
                                 read1_unmapped = flagcheck.is_unmapped
@@ -108,7 +109,8 @@ class Namegroup():
 
     def add_alignment(self, al):
         self.alignments.append(al)
-        if not (al.is_secondary or al.is_supplementary):
+        if not (legacy and al.is_secondary
+                or not legacy and al.flag & 2048 == 2048):
             self.num_prim += 1
             try:
                 self.sa += len(al.opt('SA').rstrip(';').split(';'))
@@ -132,9 +134,13 @@ description: Group BAM file by read IDs without sorting")
     parser.add_argument('-S', required=False, action='store_true', help='Input is SAM format')
     parser.add_argument('-b', required=False, action='store_true', help='Output BAM format')
     parser.add_argument('-u', required=False, action='store_true', help='Output uncompressed BAM format (implies -b)')
+    parser.add_argument('-M', action='store_true', dest='legacy', required=False, help='split reads are flagged as secondary, not supplementary. For compatibility with legacy BWA-MEM "-M" flag')
 
     # parse the arguments
     args = parser.parse_args()
+
+    global legacy
+    legacy = args.legacy
 
     # bail if no BAM file
     if args.input is None:
