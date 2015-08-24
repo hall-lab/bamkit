@@ -46,8 +46,8 @@ def bamtofastq(bamlist, is_sam, readgroup, rename, header):
                 header.close()
                 header_written = True
 
-            # must be primary read alignment
-            if (al.is_secondary):
+            # must be primary read alignment, not secondary or supplementary
+            if (al.is_secondary or al.flag & 2048 == 2048):
                 continue
 
             # skip unpaired reads
@@ -61,7 +61,7 @@ def bamtofastq(bamlist, is_sam, readgroup, rename, header):
             # ensures the read is not hard-clipped. important
             # when the BAM doesn't have shorter hits flagged as
             # secondary
-            if 5 in [x[0] for x in al.cigar]:
+            if al.cigar is not None and 5 in [x[0] for x in al.cigar]:
                 continue
 
             # add read name to dictionary if not already there
