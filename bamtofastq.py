@@ -71,8 +71,14 @@ def bamtofastq(bamlist, is_sam, readgroup, rename, header):
             # print matched read pairs
             else:
                 # RG:Z:ID
-                RG1 = d[key].opt('RG')
-                RG2 = al.opt('RG')
+                try:
+                    RG1 = d[key].opt('RG')
+                except KeyError:
+                    RG1 = ""
+                try:
+                    RG2 = al.opt('RG')
+                except KeyError:
+                    RG2 = ""
 
                 counter += 1
                 if rename:
