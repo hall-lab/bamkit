@@ -89,7 +89,10 @@ def bamgroupreads(bamfile, readgroup, reset_dups, fix_flags, is_sam, bam_out, un
                             al.mate_is_unmapped = read1_unmapped
                         al.is_proper_pair = proper_pair
                         al.is_duplicate = duplicate
-                    out_bam.write(al)
+                    try:
+                        out_bam.write(al)
+                    except ValueError: # happens when pipe is closed
+                        sys.exit(0)
                 del d[key]
     if len(d) != 0:
         sys.stderr.write('Warning: %s unmatched name groups\n' % len(d))
